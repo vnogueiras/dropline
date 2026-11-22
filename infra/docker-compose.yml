@@ -72,6 +72,23 @@ services:
       timeout: 10s
       retries: 10
 
+  kafka-init:
+    image: apache/kafka:4.1.2
+    container_name: dropline-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "/scripts/create-topics.sh"]
+    volumes:
+      - ./kafka/create-topics.sh:/scripts/create-topics.sh:ro
+      - ./kafka/topics.txt:/config/topics.txt:ro
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: kafka:29092
+      TOPICS_FILE: /config/topics.txt
+    restart: "no"
+    profiles:
+      - infra
+
   kafka-ui:
     image: kafbat/kafka-ui:latest
     container_name: dropline-kafka-ui

@@ -1,0 +1,6 @@
+# Application topics
+seat-events:6
+order-events:3
+payment-commands:3
+payment-events:3
+catalog-events:1
