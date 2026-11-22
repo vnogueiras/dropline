@@ -180,6 +180,75 @@ If Redis is down, the cache falls back to the database; holds and rate limiting 
 
 All five databases run on one PostgreSQL instance locally and in GKE; each service has its own user that can only connect to its own database (see [ADR-0001](adr/0001-database-per-service-one-postgres.md) and Trello bug H-01).
 
+### 7.1 Catalog schema (catalog-service)
+
+Source of truth: [`V1__catalog_schema.sql`](../backend/catalog-service/src/main/resources/db/migration/V1__catalog_schema.sql), applied by Flyway (`ddl-auto=validate`, Hibernate never creates tables).
+
+```mermaid
+erDiagram
+    VENUE ||--o{ EVENT : hosts
+    EVENT ||--o{ PRICE_TIER : "priced by"
+    EVENT ||--o{ SEAT : has
+    PRICE_TIER |o--o{ SEAT : "applies to"
+
+    VENUE {
+        uuid id PK
+        varchar name "120, not null"
+        varchar city "80, not null"
+        varchar timezone "IANA zone id, e.g. Europe/Madrid"
+        jsonb layout "recursive section tree, not null"
+        timestamptz created_at "default now"
+    }
+    EVENT {
+        uuid id PK
+        uuid venue_id FK "not null"
+        varchar title "200"
+        text description
+        text image_url
+        timestamptz starts_at
+        timestamptz ends_at
+        timestamptz sale_starts_at
+        varchar status "DRAFT, PUBLISHED, ON_SALE, SOLD_OUT, FINISHED"
+        timestamptz created_at "default now"
+        timestamptz updated_at
+    }
+    PRICE_TIER {
+        uuid id PK
+        uuid event_id FK "not null"
+        varchar name "40"
+        int price_cents "check >= 0"
+        char currency "3, default EUR"
+    }
+    SEAT {
+        uuid id PK
+        uuid event_id FK "not null"
+        varchar section_path UK "e.g. Arena/Balcony/Left"
+        varchar row_label UK "4"
+        int seat_number UK
+        uuid tier_id FK "nullable"
+    }
+```
+
+| Constraint / index | Purpose |
+|---|---|
+| `uq_seat_event_location` UNIQUE (`event_id`, `section_path`, `row_label`, `seat_number`) | A physical seat exists once per event |
+| `idx_event_status_starts_at` on `event(status, starts_at)` | Event list and calendar queries ("upcoming, on sale") |
+| `idx_seat_event_id` on `seat(event_id)` | Load all seats of an event (layout, seat counts per tier) |
+| `CHECK status IN (...)` | Only valid event states |
+| `CHECK price_cents >= 0` | Prices stored as integer cents, never floating point |
+
+`venue.layout` is a recursive tree (a node has either `children` or seats), walked recursively by `LayoutWalker` (P1-03) to generate `seat` rows and their `section_path`:
+
+```json
+{ "name": "Arena", "children": [
+  { "name": "Floor", "tier": "FLOOR", "rows": ["A", "B", "C"], "seatsPerRow": 20 },
+  { "name": "Balcony", "children": [
+    { "name": "Left",  "tier": "BALCONY", "rows": ["D", "E"], "seatsPerRow": 12 },
+    { "name": "Right", "tier": "BALCONY", "rows": ["D", "E"], "seatsPerRow": 12 } ] } ] }
+```
+
+Seat **availability** (free / held / sold) is not stored here: it belongs to reservation-service's own database (`seat_state`), linked only by `seat_id`.
+
 ## 8. Decision records
 
 | ADR | Decision |
