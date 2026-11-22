@@ -85,8 +85,8 @@ flowchart LR
 
 | Phase | What | Status |
 |---|---|---|
-| 0 | Repo, toolchain, Docker Compose infra, Kafka topics as code, architecture and ADRs | 🟡 in progress |
-| 1 | Catalog + browsing: events API, Redis cache, calendar, AVL timeline, Angular list/detail/calendar | ⚪ next |
+| 0 | Repo, toolchain, Docker Compose infra, Kafka topics as code, architecture and ADRs | ✅ done |
+| 1 | Catalog + browsing: events API, Redis cache, calendar, AVL timeline, Angular list/detail/calendar | 🟡 in progress |
 | 2 | Seat holds: Redis Lua scripts, concurrency tests, seat map UI | ⚪ |
 | 3 | Kafka + live updates over SSE | ⚪ |
 | 4 | Orders, payments and the saga (outbox, idempotency, DLT) | ⚪ |
