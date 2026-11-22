@@ -1,3 +1,12 @@
+pre-commit:
+  commands:
+    spotless:
+      glob: "backend/**/*.java"
+      run: cd backend && mvn spotless:check
+
+    prettier:
+      glob: "frontend/**/*.{ts,html,scss,css,json}"
+      run: npx prettier --check {staged_files}
 commit-msg:
   commands:
     commitlint:
