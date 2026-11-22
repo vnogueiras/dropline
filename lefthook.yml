@@ -6,8 +6,9 @@ pre-commit:
 
     prettier:
       glob: "frontend/**/*.{ts,html,scss,css,json}"
-      run: npx prettier --check {staged_files}
+      run: frontend/node_modules/.bin/prettier --check {staged_files}
+
 commit-msg:
   commands:
     commitlint:
-      run: commitlint lint --message={1}
+      run: commitlint lint --message={1}%
