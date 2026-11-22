@@ -1,0 +1,88 @@
+package dev.dropline.catalog.domain.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
+import java.time.Instant;
+import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "event")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class Event {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "venue_id", nullable = false)
+    private Venue venue;
+
+    @Id
+    private UUID id;
+
+    @Setter
+    @Size(max = 200)
+    @Column(name = "title", length = 200)
+    private String title;
+
+    @Setter
+    @Column(name = "description")
+    private String description;
+
+    @Setter
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Setter
+    @Column(name = "starts_at")
+    private Instant startsAt;
+
+    @Setter
+    @Column(name = "ends_at")
+    private Instant endsAt;
+
+    @Setter
+    @Column(name = "sale_starts_at")
+    private Instant saleStartsAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20)
+    private EventStatus status;
+
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    public Event(
+            Venue venue,
+            String title,
+            String description,
+            String imageUrl,
+            Instant startsAt,
+            Instant endsAt,
+            Instant saleStartsAt) {
+        if (venue == null) {
+            throw new IllegalArgumentException("Venue cannot be null");
+        }
+
+        if (title != null && title.length() > 200) {
+            throw new IllegalArgumentException("Title cannot exceed 200 characters");
+        }
+
+        this.id = UUID.randomUUID();
+        this.venue = venue;
+        this.title = title;
+        this.description = description;
+        this.imageUrl = imageUrl;
+        this.startsAt = startsAt;
+        this.endsAt = endsAt;
+        this.saleStartsAt = saleStartsAt;
+        this.status = EventStatus.DRAFT;
+        this.createdAt = Instant.now();
+        this.updatedAt = null;
+    }
+}
