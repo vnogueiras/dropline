@@ -13,7 +13,6 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import tools.jackson.databind.JsonNode;
@@ -27,25 +26,21 @@ public class Venue {
     @Id
     private UUID id;
 
-    @Setter
     @NotBlank
     @Size(max = 120)
     @Column(name = "name", nullable = false, length = 120)
     private String name;
 
-    @Setter
     @NotBlank
     @Size(max = 80)
     @Column(name = "city", nullable = false, length = 80)
     private String city;
 
-    @Setter
     @NotBlank
     @Size(max = 40)
     @Column(name = "timezone", nullable = false, length = 40)
     private String timezone;
 
-    @Setter
     @NotNull
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "layout", nullable = false)

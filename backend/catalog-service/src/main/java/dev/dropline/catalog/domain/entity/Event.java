@@ -7,7 +7,6 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "event")
@@ -22,28 +21,22 @@ public class Event {
     @Id
     private UUID id;
 
-    @Setter
     @Size(max = 200)
     @Column(name = "title", length = 200)
     private String title;
 
-    @Setter
     @Column(name = "description")
     private String description;
 
-    @Setter
     @Column(name = "image_url")
     private String imageUrl;
 
-    @Setter
     @Column(name = "starts_at")
     private Instant startsAt;
 
-    @Setter
     @Column(name = "ends_at")
     private Instant endsAt;
 
-    @Setter
     @Column(name = "sale_starts_at")
     private Instant saleStartsAt;
 
