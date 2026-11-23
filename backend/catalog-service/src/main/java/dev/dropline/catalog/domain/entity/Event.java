@@ -58,12 +58,21 @@ public class Event {
             Instant startsAt,
             Instant endsAt,
             Instant saleStartsAt) {
+
         if (venue == null) {
             throw new IllegalArgumentException("Venue cannot be null");
         }
 
         if (title != null && title.length() > 200) {
             throw new IllegalArgumentException("Title cannot exceed 200 characters");
+        }
+
+        if (startsAt != null && endsAt != null && !endsAt.isAfter(startsAt)) {
+            throw new IllegalArgumentException("Event end must be after event start");
+        }
+
+        if (saleStartsAt != null && startsAt != null && saleStartsAt.isAfter(startsAt)) {
+            throw new IllegalArgumentException("Sale cannot start after the event starts");
         }
 
         this.id = UUID.randomUUID();

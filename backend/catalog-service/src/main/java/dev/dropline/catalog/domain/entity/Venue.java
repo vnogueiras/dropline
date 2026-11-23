@@ -7,6 +7,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.UUID;
@@ -53,18 +54,31 @@ public class Venue {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Venue name cannot be blank");
         }
+        if (name.length() > 120) {
+            throw new IllegalArgumentException("Venue name cannot exceed 120 characters");
+        }
+
         if (city == null || city.isBlank()) {
             throw new IllegalArgumentException("City name cannot be blank");
         }
+        if (city.length() > 80) {
+            throw new IllegalArgumentException("City cannot exceed 80 characters");
+        }
+
         if (timezone == null || timezone.isBlank()) {
             throw new IllegalArgumentException("Timezone cannot be blank");
         }
-        if (layout == null) {
-            throw new IllegalArgumentException("Layout cannot be blank");
+        if (timezone.length() > 40) {
+            throw new IllegalArgumentException("Timezone cannot exceed 40 characters");
         }
+
+        if (layout == null) {
+            throw new IllegalArgumentException("Layout cannot be null");
+        }
+
         try {
             ZoneId.of(timezone);
-        } catch (Exception e) {
+        } catch (DateTimeException e) {
             throw new IllegalArgumentException("Invalid timezone: " + timezone, e);
         }
 
@@ -72,7 +86,7 @@ public class Venue {
         this.name = name;
         this.city = city;
         this.timezone = timezone;
-        this.layout = layout;
+        this.layout = layout.deepCopy();
         this.createdAt = Instant.now();
     }
 }

@@ -27,23 +27,24 @@ public class Seat {
     private PriceTier tier;
 
     @Size(max = 200)
-    @Column(name = "section_path", length = 200)
+    @Column(name = "section_path", nullable = false, length = 200)
     private String sectionPath;
 
     @Size(max = 4)
-    @Column(name = "row_label", length = 4)
+    @Column(name = "row_label", nullable = false, length = 4)
     private String rowLabel;
 
-    @Column(name = "seat_number")
-    private Integer seatNumber;
+    @Column(name = "seat_number", nullable = false)
+    private int seatNumber;
 
-    public Seat(Event event, String sectionPath, String rowLabel, Integer seatNumber, PriceTier tier) {
+    public Seat(Event event, String sectionPath, String rowLabel, int seatNumber, PriceTier tier) {
+
         if (event == null) {
             throw new IllegalArgumentException("Event cannot be null");
         }
 
         if (sectionPath == null || sectionPath.isBlank()) {
-            throw new IllegalArgumentException("Section path cannot be empty");
+            throw new IllegalArgumentException("Section path cannot be blank");
         }
 
         if (sectionPath.length() > 200) {
@@ -51,14 +52,14 @@ public class Seat {
         }
 
         if (rowLabel == null || rowLabel.isBlank()) {
-            throw new IllegalArgumentException("Row label cannot be empty");
+            throw new IllegalArgumentException("Row label cannot be blank");
         }
 
         if (rowLabel.length() > 4) {
             throw new IllegalArgumentException("Row label cannot exceed 4 characters");
         }
 
-        if (seatNumber == null || seatNumber <= 0) {
+        if (seatNumber <= 0) {
             throw new IllegalArgumentException("Seat number must be positive");
         }
 

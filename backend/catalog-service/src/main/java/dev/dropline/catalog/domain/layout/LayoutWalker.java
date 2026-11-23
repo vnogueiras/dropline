@@ -6,13 +6,13 @@ import java.util.stream.IntStream;
 public class LayoutWalker {
 
     public int countSeats(LayoutNode node) {
-        if (node instanceof SeatBlock seatBlock) {
-            return seatBlock.rows().stream().mapToInt(SeatBlock.Row::seatCount).sum();
-        }
-        if (node instanceof Section section) {
-            return section.children().stream().mapToInt(this::countSeats).sum();
-        }
-        throw new IllegalArgumentException("Unsupported layout node: " + node);
+        return switch (node) {
+            case SeatBlock seatBlock ->
+                seatBlock.rows().stream().mapToInt(SeatBlock.Row::seatCount).sum();
+
+            case Section section ->
+                section.children().stream().mapToInt(this::countSeats).sum();
+        };
     }
 
     public List<SeatPosition> flatten(LayoutNode layout) {
@@ -20,20 +20,24 @@ public class LayoutWalker {
     }
 
     private List<SeatPosition> flattenRec(LayoutNode node, String path) {
-        if (node instanceof SeatBlock seatBlock) {
-            String resPath = path.isEmpty() ? seatBlock.name() : path + "/" + seatBlock.name();
-            return seatBlock.rows().stream()
-                    .flatMap(row -> IntStream.rangeClosed(1, row.seatCount())
-                            .mapToObj(idx -> new SeatPosition(resPath, row.label(), idx)))
-                    .toList();
-        }
-        if (node instanceof Section section) {
-            String resPath = path.isEmpty() ? section.name() : path + "/" + section.name();
-            return section.children().stream()
-                    .flatMap(child -> flattenRec(child, resPath).stream())
-                    .toList();
-        }
-        throw new IllegalArgumentException("Unsupported layout node: " + node);
+        return switch (node) {
+            case SeatBlock seatBlock -> {
+                String resPath = path.isEmpty() ? seatBlock.name() : path + "/" + seatBlock.name();
+
+                yield seatBlock.rows().stream()
+                        .flatMap(row -> IntStream.rangeClosed(1, row.seatCount())
+                                .mapToObj(idx -> new SeatPosition(resPath, row.label(), idx)))
+                        .toList();
+            }
+
+            case Section section -> {
+                String resPath = path.isEmpty() ? section.name() : path + "/" + section.name();
+
+                yield section.children().stream()
+                        .flatMap(child -> flattenRec(child, resPath).stream())
+                        .toList();
+            }
+        };
     }
 
     public void validateDepth(LayoutNode node) {
@@ -42,15 +46,20 @@ public class LayoutWalker {
 
     private void validateDepthRec(LayoutNode node, int levels) {
         levels++;
+
         if (levels > 5) {
             throw new IllegalArgumentException("Layout cannot exceed 5 levels");
         }
-        if (node instanceof SeatBlock) {
-            return;
-        }
-        if (node instanceof Section section) {
-            for (LayoutNode child : section.children()) {
-                validateDepthRec(child, levels);
+
+        switch (node) {
+            case SeatBlock ignored -> {
+                // Leaf node
+            }
+
+            case Section section -> {
+                for (LayoutNode child : section.children()) {
+                    validateDepthRec(child, levels);
+                }
             }
         }
     }
