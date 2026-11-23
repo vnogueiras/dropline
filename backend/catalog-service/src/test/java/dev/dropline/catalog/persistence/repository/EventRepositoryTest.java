@@ -4,9 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.dropline.catalog.api.dto.EventSummaryDto;
 import dev.dropline.catalog.domain.entity.Event;
+import dev.dropline.catalog.domain.entity.PriceTier;
+import dev.dropline.catalog.domain.entity.Seat;
 import dev.dropline.catalog.domain.entity.Venue;
+import dev.dropline.catalog.persistence.repository.projection.SeatCountByTierView;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -36,6 +40,9 @@ class EventRepositoryTest {
 
     @Autowired
     private EntityManager entityManager;
+
+    @Autowired
+    private SeatRepository seatRepository;
 
     @TestConfiguration
     static class CacheTestConfiguration {
@@ -76,6 +83,83 @@ class EventRepositoryTest {
         assertThat(summary.venueName()).isEqualTo("Test Venue");
         assertThat(summary.city()).isEqualTo("Amsterdam");
         assertThat(summary.startsAt()).isEqualTo(Instant.parse("2027-06-15T19:00:00Z"));
+    }
+
+    @Test
+    void shouldFindDetailedEventWithVenueAndPriceTiers() {
+        // Arrange
+        Venue venue = createVenue("Test Venue", "Amsterdam");
+        entityManager.persist(venue);
+
+        Event event = createEvent(venue, "Test Concert", Instant.parse("2027-06-15T19:00:00Z"));
+        entityManager.persist(event);
+
+        PriceTier regular = new PriceTier(event, "Regular", 5000, "EUR");
+        PriceTier vip = new PriceTier(event, "VIP", 10000, "EUR");
+
+        entityManager.persist(regular);
+        entityManager.persist(vip);
+
+        entityManager.flush();
+        UUID eventId = event.getId();
+
+        entityManager.clear();
+
+        // Act
+        Event result = eventRepository.findDetailedById(eventId).orElseThrow();
+
+        // Assert
+        assertThat(result.getId()).isEqualTo(eventId);
+        assertThat(result.getVenue().getName()).isEqualTo("Test Venue");
+        assertThat(result.getPriceTiers()).extracting(PriceTier::getName).containsExactlyInAnyOrder("Regular", "VIP");
+    }
+
+    @Test
+    void shouldReturnEmptyWhenDetailedEventDoesNotExist() {
+        // Act
+        var result = eventRepository.findDetailedById(UUID.randomUUID());
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldCountSeatsByPriceTier() {
+        // Arrange
+        Venue venue = createVenue("Test Venue", "Amsterdam");
+        entityManager.persist(venue);
+
+        Event event = createEvent(venue, "Test Concert", Instant.parse("2027-06-15T19:00:00Z"));
+        entityManager.persist(event);
+
+        PriceTier regular = new PriceTier(event, "Regular", 5000, "EUR");
+        PriceTier vip = new PriceTier(event, "VIP", 10000, "EUR");
+
+        entityManager.persist(regular);
+        entityManager.persist(vip);
+
+        entityManager.persist(new Seat(event, "Main", "A", 1, regular));
+        entityManager.persist(new Seat(event, "Main", "A", 2, regular));
+        entityManager.persist(new Seat(event, "Main", "A", 3, regular));
+
+        entityManager.persist(new Seat(event, "VIP", "B", 1, vip));
+        entityManager.persist(new Seat(event, "VIP", "B", 2, vip));
+        entityManager.flush();
+        UUID eventId = event.getId();
+
+        entityManager.clear();
+
+        // Act
+        var result = seatRepository.countSeatsByTier(eventId);
+
+        // Assert
+        assertThat(result).hasSize(2);
+
+        assertThat(result)
+                .extracting(SeatCountByTierView::getTierId, SeatCountByTierView::getSeatCount)
+                .containsExactlyInAnyOrder(
+                        org.assertj.core.groups.Tuple.tuple(regular.getId(), 3L),
+                        org.assertj.core.groups.Tuple.tuple(vip.getId(), 2L));
     }
 
     private Venue createVenue(String name, String city) {

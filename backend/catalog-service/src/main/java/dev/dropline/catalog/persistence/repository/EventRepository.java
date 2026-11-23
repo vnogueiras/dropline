@@ -2,9 +2,11 @@ package dev.dropline.catalog.persistence.repository;
 
 import dev.dropline.catalog.domain.entity.Event;
 import dev.dropline.catalog.persistence.repository.projection.EventSummaryView;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -26,4 +28,7 @@ public interface EventRepository
     JOIN e.venue v
     """)
     Page<EventSummaryView> findEventSummaries(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"venue", "priceTiers"})
+    Optional<Event> findDetailedById(UUID id);
 }

@@ -1,7 +1,11 @@
 spring:
   application:
     name: catalog-service
-
+  jpa:
+    properties:
+      hibernate:
+        type:
+          json_format_mapper: jackson3
   profiles:
     default: local
 

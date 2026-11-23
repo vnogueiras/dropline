@@ -3,6 +3,8 @@ package dev.dropline.catalog.domain.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,6 +19,9 @@ public class Event {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venue_id", nullable = false)
     private Venue venue;
+
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
+    private List<PriceTier> priceTiers = new ArrayList<>();
 
     @Id
     private UUID id;
