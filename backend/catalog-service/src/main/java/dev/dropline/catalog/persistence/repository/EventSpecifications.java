@@ -19,9 +19,12 @@ public final class EventSpecifications {
                 criteriaBuilder.equal(root.get("venue").get("city"), city);
     }
 
-    public static Specification<Event> startsOnOrAfter(Instant date) {
-        return (root, query, criteriaBuilder) ->
-                criteriaBuilder.greaterThanOrEqualTo(root.<Instant>get("startsAt"), date);
+    public static Specification<Event> startsOnOrAfter(Instant from) {
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("startsAt"), from);
+    }
+
+    public static Specification<Event> startsBefore(Instant toExclusive) {
+        return (root, query, cb) -> cb.lessThan(root.get("startsAt"), toExclusive);
     }
 
     public static Specification<Event> startsBetween(Instant dateFrom, Instant dateTo) {

@@ -11,6 +11,10 @@ spring:
         order_inserts: true
   profiles:
     default: local
+  data:
+    web:
+      pageable:
+        serialization-mode: via-dto
 
 server:
   port: 8081

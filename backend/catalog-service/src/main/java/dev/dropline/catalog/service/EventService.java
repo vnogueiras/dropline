@@ -54,10 +54,10 @@ public class EventService {
             fromLocal = Instant.now();
         }
 
+        specification = specification.and(EventSpecifications.startsOnOrAfter(fromLocal));
+
         if (to != null) {
-            specification = specification.and(EventSpecifications.startsBetween(fromLocal, to));
-        } else {
-            specification = specification.and(EventSpecifications.startsOnOrAfter(fromLocal));
+            specification = specification.and(EventSpecifications.startsBefore(to));
         }
 
         return eventRepository.findEventSummaries(specification, mapSort(pageable));
