@@ -1,0 +1,22 @@
+<mat-toolbar>
+  <img src="/images/logo/dropline-logo.svg" alt="Dropline" class="logo-image h-8 w-auto" />
+
+  <span class="spacer"></span>
+  <nav class="nav-links">
+    <a mat-button routerLink="/events">Events</a>
+    <button mat-button disabled>My Tickets</button>
+  </nav>
+
+  <button
+    class="theme-button"
+    mat-icon-button
+    (click)="themeService.toggleTheme()"
+    [attr.aria-label]="
+      themeService.theme() === 'light' ? 'Switch to dark theme' : 'Switch to light theme'
+    "
+  >
+    <mat-icon>
+      {{ themeService.theme() === 'light' ? 'dark_mode' : 'light_mode' }}
+    </mat-icon>
+  </button>
+</mat-toolbar>
