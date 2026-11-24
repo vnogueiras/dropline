@@ -92,4 +92,12 @@ public class Event {
         this.createdAt = Instant.now();
         this.updatedAt = null;
     }
+
+    public void changeStatus(EventStatus status) {
+        if (status == null) {
+            throw new IllegalArgumentException("Status cannot be null");
+        }
+
+        this.status = status;
+    }
 }
