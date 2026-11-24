@@ -2,6 +2,7 @@ package dev.dropline.catalog.persistence.repository;
 
 import dev.dropline.catalog.api.dto.EventSummaryDto;
 import dev.dropline.catalog.domain.entity.Event;
+import dev.dropline.catalog.domain.entity.PriceTier;
 import dev.dropline.catalog.domain.entity.Venue;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -51,34 +52,50 @@ public class EventRepositoryCustomImpl implements EventRepositoryCustom {
 
         List<Order> orders = new ArrayList<>();
 
-        List<String> allowedSortProperties =
-                List.of("id", "title", "imageUrl", "startsAt", "status", "venueName", "city");
+        List<String> allowedSortProperties = List.of("title", "startsAt", "status", "venueName", "city", "minPrice");
 
         for (Sort.Order sortOrder : pageable.getSort()) {
             String property = sortOrder.getProperty();
+            boolean ascending = sortOrder.isAscending();
 
             if (!allowedSortProperties.contains(property)) {
                 throw new IllegalArgumentException("Invalid sort property: " + property);
             }
 
             if (property.equals("city")) {
-                if (sortOrder.isAscending()) {
-                    orders.add(criteriaBuilder.asc(venueJoin.get("city")));
-                } else {
-                    orders.add(criteriaBuilder.desc(venueJoin.get("city")));
-                }
+                orders.add(
+                        ascending
+                                ? criteriaBuilder.asc(venueJoin.get("city"))
+                                : criteriaBuilder.desc(venueJoin.get("city")));
+
             } else if (property.equals("venueName")) {
-                if (sortOrder.isAscending()) {
-                    orders.add(criteriaBuilder.asc(venueJoin.get("name")));
-                } else {
-                    orders.add(criteriaBuilder.desc(venueJoin.get("name")));
-                }
+                orders.add(
+                        ascending
+                                ? criteriaBuilder.asc(venueJoin.get("name"))
+                                : criteriaBuilder.desc(venueJoin.get("name")));
+
+            } else if (property.equals("minPrice")) {
+                Subquery<Integer> minPriceQuery = query.subquery(Integer.class);
+                Root<PriceTier> priceTierRoot = minPriceQuery.from(PriceTier.class);
+
+                minPriceQuery.select(criteriaBuilder.min(priceTierRoot.get("priceCents")));
+                minPriceQuery.where(
+                        criteriaBuilder.equal(priceTierRoot.get("event").get("id"), eventRoot.get("id")));
+
+                // Events without price tiers receive 1; the others receive 0.
+                Expression<Integer> nullRank = criteriaBuilder
+                        .<Integer>selectCase()
+                        .when(criteriaBuilder.isNull(minPriceQuery), 1)
+                        .otherwise(0);
+
+                orders.add(criteriaBuilder.asc(nullRank));
+                orders.add(ascending ? criteriaBuilder.asc(minPriceQuery) : criteriaBuilder.desc(minPriceQuery));
+
             } else {
-                if (sortOrder.isAscending()) {
-                    orders.add(criteriaBuilder.asc(eventRoot.get(property)));
-                } else {
-                    orders.add(criteriaBuilder.desc(eventRoot.get(property)));
-                }
+                orders.add(
+                        ascending
+                                ? criteriaBuilder.asc(eventRoot.get(property))
+                                : criteriaBuilder.desc(eventRoot.get(property)));
             }
         }
 
