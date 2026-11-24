@@ -11,6 +11,7 @@ describe('EventDetails', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(EventDetails);
+    fixture.componentRef.setInput('id', '123');
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

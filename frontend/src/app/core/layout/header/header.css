@@ -14,5 +14,19 @@
 }
 
 .theme-button {
-  margin: 16px;
+  margin-left: 8px;
+}
+
+.mobile-menu-button {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .nav-links {
+    display: none;
+  }
+
+  .mobile-menu-button {
+    display: inline-flex;
+  }
 }

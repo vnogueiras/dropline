@@ -1,12 +1,30 @@
 <mat-toolbar>
-  <img src="/images/logo/dropline-logo.svg" alt="Dropline" class="logo-image h-8 w-auto" />
+  <img src="/images/logo/dropline-logo.svg" alt="Dropline" class="logo-image" />
 
   <span class="spacer"></span>
+
+  <!-- Desktop navigation -->
   <nav class="nav-links">
     <a mat-button routerLink="/events">Events</a>
     <button mat-button disabled>My Tickets</button>
   </nav>
 
+  <!-- Mobile navigation -->
+  <button
+    class="mobile-menu-button"
+    mat-icon-button
+    [matMenuTriggerFor]="mobileMenu"
+    aria-label="Open navigation menu"
+  >
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <mat-menu #mobileMenu="matMenu">
+    <a mat-menu-item routerLink="/events">Events</a>
+    <button mat-menu-item disabled>My Tickets</button>
+  </mat-menu>
+
+  <!-- Theme toggle -->
   <button
     class="theme-button"
     mat-icon-button
