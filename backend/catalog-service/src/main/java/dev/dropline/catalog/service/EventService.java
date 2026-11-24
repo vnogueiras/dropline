@@ -2,7 +2,6 @@ package dev.dropline.catalog.service;
 
 import dev.dropline.catalog.api.dto.EventDetailDto;
 import dev.dropline.catalog.api.dto.EventSummaryDto;
-import dev.dropline.catalog.api.exception.InvalidSortException;
 import dev.dropline.catalog.api.mapper.EventMapper;
 import dev.dropline.catalog.domain.entity.Event;
 import dev.dropline.catalog.domain.entity.EventStatus;
@@ -29,8 +28,6 @@ public class EventService {
     private final SeatRepository seatRepository;
     private final VenueRepository venueRepository;
     private final EventMapper eventMapper;
-
-    private static final Set<String> ALLOWED_SORTS = Set.of("startsAt", "title", "minPrice");
 
     public Page<EventSummaryDto> findEvents(
             Set<EventStatus> statuses, String city, Instant from, Instant to, Pageable pageable) {
@@ -75,20 +72,9 @@ public class EventService {
         return venueRepository.findDistinctCities();
     }
 
-    private String mapSortProperty(String sort) {
-        if (!ALLOWED_SORTS.contains(sort)) {
-            throw new InvalidSortException(sort);
-        }
-        return switch (sort) {
-            case "startsAt", "title" -> sort;
-            case "minPrice" -> "minPriceCents";
-            default -> throw new InvalidSortException(sort);
-        };
-    }
-
     private Pageable mapSort(Pageable pageable) {
         Sort sort = Sort.by(pageable.getSort().stream()
-                .map(order -> new Sort.Order(order.getDirection(), mapSortProperty(order.getProperty())))
+                .map(order -> new Sort.Order(order.getDirection(), order.getProperty()))
                 .toList());
 
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
