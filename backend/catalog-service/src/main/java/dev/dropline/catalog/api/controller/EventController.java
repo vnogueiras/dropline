@@ -38,6 +38,10 @@ public class EventController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "12") @Min(1) @Max(50) int size,
             @RequestParam(defaultValue = "startsAt,asc") String sort) {
+        if (from != null && to != null && to.isBefore(from)) {
+            throw new IllegalArgumentException("The 'to' date must not be before the 'from' date");
+        }
+
         Set<EventStatus> statuses = status == null ? null : Set.of(status);
         Instant fromInstant = from != null ? from.atStartOfDay(ZoneOffset.UTC).toInstant() : null;
         Instant toInstant =
