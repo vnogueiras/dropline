@@ -9,11 +9,9 @@ import dev.dropline.catalog.domain.entity.EventStatus;
 import dev.dropline.catalog.persistence.repository.EventRepository;
 import dev.dropline.catalog.persistence.repository.EventSpecifications;
 import dev.dropline.catalog.persistence.repository.SeatRepository;
+import dev.dropline.catalog.persistence.repository.VenueRepository;
 import java.time.Instant;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,6 +27,7 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final SeatRepository seatRepository;
+    private final VenueRepository venueRepository;
     private final EventMapper eventMapper;
 
     private static final Set<String> ALLOWED_SORTS = Set.of("startsAt", "title", "minPrice");
@@ -70,6 +69,10 @@ public class EventService {
 
             return eventMapper.toDetailDto(event, seatCounts);
         });
+    }
+
+    public List<String> findCities() {
+        return venueRepository.findDistinctCities();
     }
 
     private String mapSortProperty(String sort) {
