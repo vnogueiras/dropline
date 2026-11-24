@@ -53,4 +53,14 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(problem);
     }
+
+    @ExceptionHandler(InvalidSortException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidSort(InvalidSortException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+
+        problem.setTitle("Invalid Sort Parameter");
+
+        return ResponseEntity.badRequest().body(problem);
+    }
 }

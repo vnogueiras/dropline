@@ -57,10 +57,6 @@ public class EventController {
     private Sort parseSort(String sort) {
         String[] parts = sort.split(",", -1);
 
-        if (parts.length > 2 || parts[0].isBlank()) {
-            throw new IllegalArgumentException("Invalid sort parameter: " + sort);
-        }
-
         String property = parts[0].strip();
 
         Sort.Direction direction = parts.length == 2 ? Sort.Direction.fromString(parts[1].strip()) : Sort.Direction.ASC;

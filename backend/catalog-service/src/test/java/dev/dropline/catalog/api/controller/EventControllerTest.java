@@ -5,6 +5,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import dev.dropline.catalog.api.exception.InvalidSortException;
 import dev.dropline.catalog.domain.entity.EventStatus;
 import dev.dropline.catalog.service.EventService;
 import java.time.Instant;
@@ -153,5 +154,21 @@ class EventControllerTest {
     @Test
     void shouldRejectInvalidSortDirection() throws Exception {
         mockMvc.perform(get("/api/events").param("sort", "startsAt,sideways")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldReturn400WhenSortPropertyIsInvalid() throws Exception {
+        when(eventService.findEvents(
+                        isNull(),
+                        nullable(String.class),
+                        nullable(Instant.class),
+                        nullable(Instant.class),
+                        any(Pageable.class)))
+                .thenThrow(new InvalidSortException("foo"));
+
+        mockMvc.perform(get("/api/events").param("sort", "foo"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Invalid Sort Parameter"))
+                .andExpect(jsonPath("$.detail").value("Sorting by 'foo' is not supported"));
     }
 }
