@@ -35,7 +35,7 @@ import tools.jackson.databind.ObjectMapper;
 @ActiveProfiles("test")
 @DataJpaTest
 @Testcontainers
-class EventRepositoryTest {
+class EventRepositoryIT {
 
     @Container
     @ServiceConnection
