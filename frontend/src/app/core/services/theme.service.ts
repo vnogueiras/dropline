@@ -8,16 +8,27 @@ export type Theme = 'light' | 'dark';
 })
 export class ThemeService {
   private static readonly STORAGE_KEY = 'dropline-theme';
+  private readonly localStorageService = inject(LocalStorageService);
 
   readonly theme = signal<Theme>('light');
 
-  private readonly localStorageService = inject(LocalStorageService);
-
   constructor() {
-    const savedTheme = this.localStorageService.getItem(ThemeService.STORAGE_KEY);
+    const savedTheme = this.localStorageService.getItem<unknown>(ThemeService.STORAGE_KEY);
 
     if (savedTheme === 'light' || savedTheme === 'dark') {
       this.theme.set(savedTheme);
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+      this.theme.set(prefersDark.matches ? 'dark' : 'light');
+
+      // Follow system preference until the user selects a theme.
+      prefersDark.addEventListener('change', (event) => {
+        if (this.localStorageService.getItem<unknown>(ThemeService.STORAGE_KEY) === null) {
+          this.theme.set(event.matches ? 'dark' : 'light');
+          this.applyTheme(this.theme());
+        }
+      });
     }
 
     this.applyTheme(this.theme());
@@ -30,6 +41,6 @@ export class ThemeService {
   }
 
   private applyTheme(theme: Theme): void {
-    document.documentElement.classList.toggle('dark-theme', theme === 'dark');
+    document.documentElement.style.colorScheme = theme;
   }
 }
