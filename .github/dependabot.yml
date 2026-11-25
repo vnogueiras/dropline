@@ -5,11 +5,19 @@ updates:
     directory: /backend
     schedule:
       interval: weekly
+    groups:
+      spring:
+        patterns:
+          - "org.springframework*"
 
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
+    groups:
+      angular:
+        patterns:
+          - "@angular/*"
 
   - package-ecosystem: github-actions
     directory: /
