@@ -31,8 +31,8 @@ import tools.jackson.databind.node.JsonNodeFactory;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({EventService.class, EventMapperImpl.class, EventServiceIntegrationTest.TestCacheConfiguration.class})
-class EventServiceIntegrationTest {
+@Import({EventService.class, EventMapperImpl.class, EventServiceIT.TestCacheConfiguration.class})
+class EventServiceIT {
 
     @TestConfiguration
     static class TestCacheConfiguration {
