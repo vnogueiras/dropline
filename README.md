@@ -14,6 +14,12 @@
 ![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-GKE-326CE5?style=flat-square&logo=kubernetes&logoColor=white)
+![Angular Material](https://img.shields.io/badge/Angular%20Material-M3-3F51B5?style=flat-square&logo=angular&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+
+[![Backend CI](https://img.shields.io/github/actions/workflow/status/vnogueiras/dropline/backend-ci.yml?branch=main&style=flat-square&label=backend%20CI&logo=githubactions&logoColor=white)](https://github.com/vnogueiras/dropline/actions/workflows/backend-ci.yml)
+[![Frontend CI](https://img.shields.io/github/actions/workflow/status/vnogueiras/dropline/frontend-ci.yml?branch=main&style=flat-square&label=frontend%20CI&logo=githubactions&logoColor=white)](https://github.com/vnogueiras/dropline/actions/workflows/frontend-ci.yml)
+[![Last commit](https://img.shields.io/github/last-commit/vnogueiras/dropline?style=flat-square)](https://github.com/vnogueiras/dropline/commits/main)
 
 [Architecture](docs/architecture.md) · [Decisions](docs/adr/) · [Roadmap](#roadmap) · [Run it locally](#run-it-locally)
 
