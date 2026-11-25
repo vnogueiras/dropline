@@ -1,0 +1,45 @@
+<mat-toolbar>
+  <app-logo />
+  <span class="flex-1"></span>
+
+  <!-- Desktop navigation -->
+  <nav class="hidden items-center gap-4 md:flex">
+    <a mat-button routerLink="/events" routerLinkActive="active-link" ariaCurrentWhenActive="page">
+      Events
+    </a>
+    <button mat-button disabled>My Tickets</button>
+  </nav>
+
+  <!-- Mobile navigation -->
+  <div class="md:hidden">
+    <button mat-icon-button [matMenuTriggerFor]="mobileMenu" aria-label="Open navigation menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+  </div>
+
+  <mat-menu #mobileMenu="matMenu">
+    <a
+      mat-menu-item
+      routerLink="/events"
+      routerLinkActive="active-link"
+      ariaCurrentWhenActive="page"
+    >
+      Events
+    </a>
+    <button mat-menu-item disabled>My Tickets</button>
+  </mat-menu>
+
+  <!-- Theme toggle -->
+  <button
+    class="ml-2"
+    mat-icon-button
+    (click)="themeService.toggleTheme()"
+    [attr.aria-label]="
+      themeService.theme() === 'light' ? 'Switch to dark theme' : 'Switch to light theme'
+    "
+  >
+    <mat-icon>
+      {{ themeService.theme() === 'light' ? 'dark_mode' : 'light_mode' }}
+    </mat-icon>
+  </button>
+</mat-toolbar>

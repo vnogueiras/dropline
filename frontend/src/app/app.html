@@ -1,7 +1,9 @@
-<div class="p-4 bg-blue-100">
-  <h1>Dropline Frontend</h1>
+<div class="flex min-h-screen flex-col">
+  <app-header></app-header>
 
-  <p>Tailwind CSS is working!</p>
+  <main class="flex-1 p-4">
+    <router-outlet></router-outlet>
+  </main>
+
+  <app-footer></app-footer>
 </div>
-
-<button mat-raised-button color="primary">Angular Material Button</button>
