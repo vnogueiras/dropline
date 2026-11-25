@@ -1,31 +1,37 @@
 <mat-toolbar>
   <app-logo />
-  <span class="spacer"></span>
+  <span class="flex-1"></span>
 
   <!-- Desktop navigation -->
-  <nav class="nav-links">
-    <a mat-button routerLink="/events">Events</a>
+  <nav class="hidden items-center gap-4 md:flex">
+    <a mat-button routerLink="/events" routerLinkActive="active-link" ariaCurrentWhenActive="page">
+      Events
+    </a>
     <button mat-button disabled>My Tickets</button>
   </nav>
 
   <!-- Mobile navigation -->
-  <button
-    class="mobile-menu-button"
-    mat-icon-button
-    [matMenuTriggerFor]="mobileMenu"
-    aria-label="Open navigation menu"
-  >
-    <mat-icon>menu</mat-icon>
-  </button>
+  <div class="md:hidden">
+    <button mat-icon-button [matMenuTriggerFor]="mobileMenu" aria-label="Open navigation menu">
+      <mat-icon>menu</mat-icon>
+    </button>
+  </div>
 
   <mat-menu #mobileMenu="matMenu">
-    <a mat-menu-item routerLink="/events">Events</a>
+    <a
+      mat-menu-item
+      routerLink="/events"
+      routerLinkActive="active-link"
+      ariaCurrentWhenActive="page"
+    >
+      Events
+    </a>
     <button mat-menu-item disabled>My Tickets</button>
   </mat-menu>
 
   <!-- Theme toggle -->
   <button
-    class="theme-button"
+    class="ml-2"
     mat-icon-button
     (click)="themeService.toggleTheme()"
     [attr.aria-label]="
