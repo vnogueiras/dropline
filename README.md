@@ -7,7 +7,7 @@
 **A ticket flash-sale platform where thousands of people grab a few seats at the same second, and nobody is ever double-sold.**
 
 ![Status](https://img.shields.io/badge/status-work%20in%20progress-ffb347?style=flat-square)
-![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![Java](https://img.shields.io/badge/Java-25-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![Angular](https://img.shields.io/badge/Angular-Signals-DD0031?style=flat-square&logo=angular&logoColor=white)
 ![Kafka](https://img.shields.io/badge/Kafka-KRaft-231F20?style=flat-square&logo=apachekafka&logoColor=white)
@@ -73,7 +73,7 @@ flowchart LR
 
 | Layer | Tech |
 |---|---|
-| **Backend** | Java 21 · Spring Boot 4 · Spring Data JPA · Spring Kafka · Spring Security + Authorization Server · Maven multi-module |
+| **Backend** | Java 25 · Spring Boot 4 · Spring Data JPA · Spring Kafka · Spring Security + Authorization Server · Maven multi-module |
 | **Frontend** | Angular (standalone, zoneless) · Signals + `httpResource` · Angular Material · Tailwind CSS |
 | **Data** | PostgreSQL 17 (database per service, Flyway) · Redis (holds, cache, rate limiting, pub/sub) |
 | **Messaging** | Apache Kafka in KRaft mode · transactional outbox · dead-letter topics |
@@ -83,7 +83,7 @@ flowchart LR
 
 ### Things worth a closer look
 
-- ☕ **Modern Java on purpose:** records, sealed types, pattern matching for `switch`, record patterns, sequenced collections, virtual threads, text blocks. A *Java 9 → 21 features map* will link every feature to the file that uses it.
+- ☕ **Modern Java on purpose:** records, sealed types, pattern matching for `switch`, record patterns, sequenced collections, virtual threads, text blocks. A *Java 9 → 25 features map* will link every feature to the file that uses it.
 - 🌳 **A hand-written persistent AVL tree** (recursive insert/delete/range queries, property-tested against `TreeMap`) powers the in-memory event timeline behind the calendar.
 - 🗓️ **Time zones done right:** `java.time` end to end, DST-tested month calendars, `.ics` export.
 

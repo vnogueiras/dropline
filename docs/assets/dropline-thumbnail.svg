@@ -136,7 +136,7 @@
 <text x="80" y="345" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#c9cef0">Flash-sale ticketing.</text>
 <text x="80" y="383" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#c9cef0">Thousands of buyers, zero oversells.</text>
 <rect x="80" y="440" width="103.5" height="36" rx="18" fill="#1f2545" stroke="#39406e" stroke-width="1.5"/>
-<text x="131.75" y="464" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#dfe3ff">Java 21</text>
+<text x="131.75" y="464" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#dfe3ff">Java 25</text>
 <rect x="193.5" y="440" width="145.5" height="36" rx="18" fill="#1f2545" stroke="#39406e" stroke-width="1.5"/>
 <text x="266.25" y="464" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#dfe3ff">Spring Boot</text>
 <rect x="349.0" y="440" width="103.5" height="36" rx="18" fill="#1f2545" stroke="#39406e" stroke-width="1.5"/>
