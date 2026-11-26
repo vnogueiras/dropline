@@ -3,11 +3,14 @@ package dev.dropline.catalog.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.dropline.catalog.api.dto.EventDetailDto;
+import dev.dropline.catalog.api.dto.EventLayoutDto;
 import dev.dropline.catalog.api.mapper.EventMapperImpl;
 import dev.dropline.catalog.domain.entity.Event;
 import dev.dropline.catalog.domain.entity.PriceTier;
 import dev.dropline.catalog.domain.entity.Seat;
 import dev.dropline.catalog.domain.entity.Venue;
+import dev.dropline.catalog.domain.layout.SeatBlock;
+import dev.dropline.catalog.domain.layout.Section;
 import dev.dropline.catalog.persistence.repository.EventRepository;
 import dev.dropline.catalog.persistence.repository.SeatRepository;
 import jakarta.persistence.EntityManager;
@@ -27,6 +30,7 @@ import org.springframework.context.annotation.Import;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.JsonNodeFactory;
 
 @DataJpaTest
@@ -122,5 +126,60 @@ class EventServiceIT {
 
         // Assert
         assertThat(result).isEmpty();
+    }
+
+    @Autowired
+    private JsonMapper jsonMapper;
+
+    @Test
+    void shouldReturnLayoutWithTypedTreeAndSeats() {
+        // Arrange
+        String layoutJson = """
+                {
+                  "name": "Main Hall",
+                  "children": [
+                    { "name": "Floor", "rows": [ { "label": "A", "seatCount": 2 } ] }
+                  ]
+                }
+                """;
+        Venue venue = new Venue("Ziggo Dome", "Amsterdam", "Europe/Amsterdam", jsonMapper.readTree(layoutJson));
+        entityManager.persist(venue);
+
+        Event event = new Event(
+                venue,
+                "Test Concert",
+                "Live music",
+                "image.jpg",
+                Instant.parse("2027-06-15T19:00:00Z"),
+                Instant.parse("2027-06-15T23:00:00Z"),
+                Instant.parse("2027-05-01T10:00:00Z"));
+        entityManager.persist(event);
+
+        PriceTier regular = new PriceTier(event, "Regular", 5000, "EUR");
+        entityManager.persist(regular);
+        entityManager.persist(new Seat(event, "Main Hall/Floor", "A", 2, regular));
+        entityManager.persist(new Seat(event, "Main Hall/Floor", "A", 1, regular));
+        entityManager.flush();
+        UUID eventId = event.getId();
+        entityManager.clear();
+
+        // Act
+        EventLayoutDto result = eventService.findLayout(eventId).orElseThrow();
+
+        // Assert
+        assertThat(result.eventId()).isEqualTo(eventId);
+        assertThat(result.venueName()).isEqualTo("Ziggo Dome");
+        assertThat(result.layout()).isInstanceOf(Section.class);
+        Section root = (Section) result.layout();
+        assertThat(root.children()).singleElement().isInstanceOf(SeatBlock.class);
+        assertThat(result.seats())
+                .extracting(EventLayoutDto.SeatDto::seatNumber)
+                .containsExactly(1, 2);
+        assertThat(result.seats()).allSatisfy(seat -> assertThat(seat.tierId()).isEqualTo(regular.getId()));
+    }
+
+    @Test
+    void shouldReturnEmptyLayoutWhenEventDoesNotExist() {
+        assertThat(eventService.findLayout(UUID.randomUUID())).isEmpty();
     }
 }

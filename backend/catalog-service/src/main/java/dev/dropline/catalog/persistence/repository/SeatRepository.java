@@ -21,7 +21,6 @@ public interface SeatRepository extends JpaRepository<Seat, UUID> {
             """)
     List<SeatCountByTierView> countSeatsByTier(@Param("eventId") UUID eventId);
 
-    // SeatRepository
     @Query("""
         SELECT s.id AS id, s.sectionPath AS sectionPath, s.rowLabel AS rowLabel,
                s.seatNumber AS seatNumber, s.tier.id AS tierId

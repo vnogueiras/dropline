@@ -4,12 +4,12 @@ import java.util.UUID;
 import lombok.Getter;
 
 @Getter
-public class NotFoundException extends RuntimeException {
+public class EventNotFoundException extends RuntimeException {
 
     private final UUID eventId;
 
-    public NotFoundException(UUID eventId) {
-        super("OBject " + eventId + " was not found");
+    public EventNotFoundException(UUID eventId) {
+        super("Event " + eventId + " was not found");
         this.eventId = eventId;
     }
 }

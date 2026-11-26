@@ -8,12 +8,14 @@ import dev.dropline.catalog.domain.entity.PriceTier;
 import dev.dropline.catalog.domain.entity.Seat;
 import dev.dropline.catalog.domain.entity.Venue;
 import dev.dropline.catalog.persistence.repository.projection.SeatCountByTierView;
+import dev.dropline.catalog.persistence.repository.projection.SeatView;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -369,6 +371,62 @@ class EventRepositoryIT {
         assertThat(firstPage.getTotalElements()).isEqualTo(3);
         assertThat(secondPage.getTotalElements()).isEqualTo(3);
         assertThat(actualIds).containsExactlyElementsOf(expectedIds);
+    }
+
+    @Test
+    void shouldFindEventWithVenueFetched() {
+        Venue venue = createVenue("Test Venue", "Amsterdam");
+        entityManager.persist(venue);
+        Event event = createEvent(venue, "Test Concert", Instant.parse("2027-06-15T19:00:00Z"));
+        entityManager.persist(event);
+        entityManager.flush();
+        UUID eventId = event.getId();
+        entityManager.clear();
+
+        Event result = eventRepository.findWithVenueById(eventId).orElseThrow();
+
+        assertThat(Hibernate.isInitialized(result.getVenue())).isTrue();
+        assertThat(result.getVenue().getName()).isEqualTo("Test Venue");
+    }
+
+    @Test
+    void shouldReturnEmptyWhenEventWithVenueDoesNotExist() {
+        assertThat(eventRepository.findWithVenueById(UUID.randomUUID())).isEmpty();
+    }
+
+    @Test
+    void shouldFindSeatsOfOneEventOrderedBySectionRowAndNumber() {
+        Venue venue = createVenue("Test Venue", "Amsterdam");
+        entityManager.persist(venue);
+        Event event = createEvent(venue, "Test Concert", Instant.parse("2027-06-15T19:00:00Z"));
+        Event otherEvent = createEvent(venue, "Other Concert", Instant.parse("2027-07-15T19:00:00Z"));
+        entityManager.persist(event);
+        entityManager.persist(otherEvent);
+
+        PriceTier vip = new PriceTier(event, "VIP", 12000, "EUR");
+        entityManager.persist(vip);
+
+        // persisted out of order on purpose; one seat has no tier
+        entityManager.persist(new Seat(event, "Main Hall/Floor", "B", 1, vip));
+        entityManager.persist(new Seat(event, "Main Hall/Floor", "A", 2, vip));
+        entityManager.persist(new Seat(event, "Main Hall/Balcony", "A", 1, null));
+        entityManager.persist(new Seat(event, "Main Hall/Floor", "A", 1, vip));
+        entityManager.persist(new Seat(otherEvent, "Main Hall/Floor", "A", 1, null));
+        entityManager.flush();
+        UUID eventId = event.getId();
+        entityManager.clear();
+
+        List<SeatView> seats = seatRepository.findSeatsByEventId(eventId);
+
+        assertThat(seats)
+                .extracting(SeatView::getSectionPath, SeatView::getRowLabel, SeatView::getSeatNumber)
+                .containsExactly(
+                        org.assertj.core.groups.Tuple.tuple("Main Hall/Balcony", "A", 1),
+                        org.assertj.core.groups.Tuple.tuple("Main Hall/Floor", "A", 1),
+                        org.assertj.core.groups.Tuple.tuple("Main Hall/Floor", "A", 2),
+                        org.assertj.core.groups.Tuple.tuple("Main Hall/Floor", "B", 1));
+        assertThat(seats.getFirst().getTierId()).isNull();
+        assertThat(seats.get(1).getTierId()).isEqualTo(vip.getId());
     }
 
     private Venue createVenue(String name, String city) {

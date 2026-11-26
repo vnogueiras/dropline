@@ -65,8 +65,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(problem);
     }
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ProblemDetail> handleEventNotFound(NotFoundException exception) {
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleEventNotFound(EventNotFoundException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
         problem.setTitle("Event Not Found");
         problem.setType(URI.create("https://dropline.dev/problems/event-not-found"));

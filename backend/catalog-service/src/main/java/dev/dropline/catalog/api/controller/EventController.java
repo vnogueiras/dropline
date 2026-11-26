@@ -3,7 +3,7 @@ package dev.dropline.catalog.api.controller;
 import dev.dropline.catalog.api.dto.EventDetailDto;
 import dev.dropline.catalog.api.dto.EventLayoutDto;
 import dev.dropline.catalog.api.dto.EventSummaryDto;
-import dev.dropline.catalog.api.exception.NotFoundException;
+import dev.dropline.catalog.api.exception.EventNotFoundException;
 import dev.dropline.catalog.domain.entity.EventStatus;
 import dev.dropline.catalog.service.EventService;
 import jakarta.validation.constraints.Max;
@@ -60,15 +60,15 @@ public class EventController {
 
     @GetMapping("/{id}")
     public ResponseEntity<EventDetailDto> getEvent(@PathVariable UUID id) {
-        EventDetailDto event = eventService.findDetailedEvent(id).orElseThrow(() -> new NotFoundException(id));
+        EventDetailDto event = eventService.findDetailedEvent(id).orElseThrow(() -> new EventNotFoundException(id));
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(Duration.ofSeconds(30)).cachePublic())
                 .body(event);
     }
 
     @GetMapping("/{id}/layout")
-    public ResponseEntity<EventLayoutDto> getEventLayout(@PathVariable UUID id) throws NotFoundException {
-        EventLayoutDto eventLayout = eventService.findLayout(id).orElseThrow(() -> new NotFoundException(id));
+    public ResponseEntity<EventLayoutDto> getEventLayout(@PathVariable UUID id) {
+        EventLayoutDto eventLayout = eventService.findLayout(id).orElseThrow(() -> new EventNotFoundException(id));
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(Duration.ofSeconds(300)).cachePublic())
                 .body(eventLayout);
