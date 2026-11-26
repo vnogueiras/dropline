@@ -113,8 +113,8 @@ fi
 check "git" "2.39" required "brew install git" git --version
 
 # ---------- java / maven ------------------------------------------------------
-section "Backend (Java 21 + Maven)"
-JAVA_REQUIRED_MAJOR=21
+section "Backend (Java 25 + Maven)"
+JAVA_REQUIRED_MAJOR=25
 if command -v java >/dev/null 2>&1 && java -version >/dev/null 2>&1; then
   JAVA_RAW="$(java -version 2>&1)"
   JAVA_VERSION="$(printf '%s\n' "$JAVA_RAW" | extract_version)"
@@ -125,9 +125,9 @@ if command -v java >/dev/null 2>&1 && java -version >/dev/null 2>&1; then
   if [ "$JAVA_MAJOR" = "$JAVA_REQUIRED_MAJOR" ]; then
     ok "java" "$JAVA_VERSION" "$JAVA_VENDOR"
   elif [ "$JAVA_MAJOR" -gt "$JAVA_REQUIRED_MAJOR" ] 2>/dev/null; then
-    warn "java" "$JAVA_VERSION" "project targets $JAVA_REQUIRED_MAJOR → sdk use java 21-tem (or cd into repo with .sdkmanrc)"
+    warn "java" "$JAVA_VERSION" "project targets $JAVA_REQUIRED_MAJOR → sdk use java 25-tem (or cd into repo with .sdkmanrc)"
   else
-    fail "java" "$JAVA_VERSION" "need Java $JAVA_REQUIRED_MAJOR → sdk install java 21-tem"
+    fail "java" "$JAVA_VERSION" "need Java $JAVA_REQUIRED_MAJOR → sdk install java 25-tem"
   fi
   JAVA_ARCH="$(java -XshowSettings:properties -version 2>&1 | awk -F'= ' '/os.arch/ {print $2; exit}')"
   if [ "$OS" = "Darwin" ] && [ "$ARCH" = "arm64" ] && [ "$JAVA_ARCH" != "aarch64" ]; then
@@ -141,7 +141,7 @@ if command -v java >/dev/null 2>&1 && java -version >/dev/null 2>&1; then
     warn "JAVA_HOME" "unset" "IntelliJ/Maven may pick another JDK; SDKMAN sets it for you"
   fi
 else
-  fail "java" "missing" "install SDKMAN (https://sdkman.io) then: sdk install java 21-tem"
+  fail "java" "missing" "install SDKMAN (https://sdkman.io) then: sdk install java 25-tem"
 fi
 
 if [ -n "${SDKMAN_DIR:-}" ] || [ -d "$HOME/.sdkman" ]; then
@@ -152,7 +152,7 @@ fi
 if [ -f "$REPO_ROOT/.sdkmanrc" ]; then
   ok ".sdkmanrc" "present" "$(grep -E '^java=' "$REPO_ROOT/.sdkmanrc" || true)"
 else
-  warn ".sdkmanrc" "missing" "add: echo 'java=21.0.5-tem' > .sdkmanrc  (match your installed version)"
+  warn ".sdkmanrc" "missing" "run: sdk env init  (in the repo root, while Java 25 is active)"
 fi
 
 if [ -x "$REPO_ROOT/backend/mvnw" ]; then

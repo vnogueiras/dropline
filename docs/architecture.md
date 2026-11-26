@@ -20,7 +20,7 @@ The product is deliberately small (4–5 screens) so the interesting part is the
 
 ## 2. Services
 
-Six Spring Boot services (Java 21) behind one gateway. Each service owns its own database; services never read each other's tables.
+Six Spring Boot services (Java 25) behind one gateway. Each service owns its own database; services never read each other's tables.
 
 | Service | Responsibility (one line) | Owns | Talks via |
 |---|---|---|---|
@@ -48,7 +48,7 @@ flowchart LR
         gw["api-gateway<br/>JWT check, rate limit"]
     end
 
-    subgraph services["Microservices: Java 21, Spring Boot"]
+    subgraph services["Microservices: Java 25, Spring Boot"]
         idn["identity-service"]
         cat["catalog-service"]
         res["reservation-service"]
