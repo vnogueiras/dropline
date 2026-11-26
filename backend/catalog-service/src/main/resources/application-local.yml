@@ -27,8 +27,3 @@ spring:
 
   cache:
     type: redis
-
-logging:
-  level:
-    dev.dropline: DEBUG
-    org.hibernate.SQL: DEBUG

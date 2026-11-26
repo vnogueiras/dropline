@@ -12,8 +12,7 @@ public class LayoutNodeTest {
 
     @Test
     void shouldDeserializeSectionContainingSeatBlock() throws Exception {
-        String json =
-                """
+        String json = """
             {
                 "name": "Main Hall",
                 "children": [

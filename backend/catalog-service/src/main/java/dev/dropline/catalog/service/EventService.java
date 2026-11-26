@@ -1,10 +1,13 @@
 package dev.dropline.catalog.service;
 
 import dev.dropline.catalog.api.dto.EventDetailDto;
+import dev.dropline.catalog.api.dto.EventLayoutDto;
 import dev.dropline.catalog.api.dto.EventSummaryDto;
 import dev.dropline.catalog.api.mapper.EventMapper;
 import dev.dropline.catalog.domain.entity.Event;
 import dev.dropline.catalog.domain.entity.EventStatus;
+import dev.dropline.catalog.domain.entity.Venue;
+import dev.dropline.catalog.domain.layout.LayoutNode;
 import dev.dropline.catalog.persistence.repository.EventRepository;
 import dev.dropline.catalog.persistence.repository.EventSpecifications;
 import dev.dropline.catalog.persistence.repository.SeatRepository;
@@ -19,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.json.JsonMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class EventService {
     private final SeatRepository seatRepository;
     private final VenueRepository venueRepository;
     private final EventMapper eventMapper;
+    private final JsonMapper jsonMapper;
 
     public Page<EventSummaryDto> findEvents(
             Set<EventStatus> statuses, String city, Instant from, Instant to, Pageable pageable) {
@@ -70,6 +75,20 @@ public class EventService {
 
     public List<String> findCities() {
         return venueRepository.findDistinctCities();
+    }
+
+    public Optional<EventLayoutDto> findLayout(UUID eventId) {
+        return eventRepository.findWithVenueById(eventId).map(event -> {
+            Venue venue = event.getVenue();
+            LayoutNode layout = jsonMapper.treeToValue(venue.getLayout(), LayoutNode.class);
+
+            List<EventLayoutDto.SeatDto> seats = seatRepository.findSeatsByEventId(eventId).stream()
+                    .map(s -> new EventLayoutDto.SeatDto(
+                            s.getId(), s.getSectionPath(), s.getRowLabel(), s.getSeatNumber(), s.getTierId()))
+                    .toList();
+
+            return new EventLayoutDto(eventId, venue.getName(), layout, seats);
+        });
     }
 
     private Pageable mapSort(Pageable pageable) {

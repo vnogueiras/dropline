@@ -270,4 +270,4 @@ terraform.rc
 
 # Docker
 infra/.env
-# End of https://www.toptal.com/developers/gitignore/api/java,intellij,visualstudiocode,angular,macos,terraform
+# End of https://www.toptal.com/developers/gitignore/api/java,intellij,visualstudiocode,angular,macos,terraformlefthook-local.yml

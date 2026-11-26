@@ -1,25 +1,29 @@
 package dev.dropline.catalog.api.controller;
 
+import dev.dropline.catalog.api.dto.EventDetailDto;
+import dev.dropline.catalog.api.dto.EventLayoutDto;
 import dev.dropline.catalog.api.dto.EventSummaryDto;
+import dev.dropline.catalog.api.exception.NotFoundException;
 import dev.dropline.catalog.domain.entity.EventStatus;
 import dev.dropline.catalog.service.EventService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Set;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController()
 @RequestMapping("/api/events")
@@ -52,6 +56,22 @@ public class EventController {
         Page<EventSummaryDto> result = eventService.findEvents(statuses, city, fromInstant, toInstant, pageable);
 
         return new PagedModel<>(result);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<EventDetailDto> getEvent(@PathVariable UUID id) {
+        EventDetailDto event = eventService.findDetailedEvent(id).orElseThrow(() -> new NotFoundException(id));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofSeconds(30)).cachePublic())
+                .body(event);
+    }
+
+    @GetMapping("/{id}/layout")
+    public ResponseEntity<EventLayoutDto> getEventLayout(@PathVariable UUID id) throws NotFoundException {
+        EventLayoutDto eventLayout = eventService.findLayout(id).orElseThrow(() -> new NotFoundException(id));
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofSeconds(300)).cachePublic())
+                .body(eventLayout);
     }
 
     private Sort parseSort(String sort) {
