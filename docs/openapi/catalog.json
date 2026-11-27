@@ -1,0 +1,470 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "OpenAPI definition",
+    "version" : "v0"
+  },
+  "servers" : [ {
+    "description" : "Generated server url",
+    "url" : "http://localhost"
+  } ],
+  "paths" : {
+    "/api/cities" : {
+      "get" : {
+        "operationId" : "findCities",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "city-controller" ]
+      }
+    },
+    "/api/events" : {
+      "get" : {
+        "operationId" : "getEvents",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "city",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PUBLISHED", "ON_SALE", "SOLD_OUT", "FINISHED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 12,
+            "maximum" : 50,
+            "minimum" : 1
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "startsAt,asc"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelEventSummaryDto"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "event-controller" ]
+      }
+    },
+    "/api/events/{id}" : {
+      "get" : {
+        "operationId" : "getEvent",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventDetailDto"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "event-controller" ]
+      }
+    },
+    "/api/events/{id}/layout" : {
+      "get" : {
+        "operationId" : "getEventLayout",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EventLayoutDto"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "event-controller" ]
+      }
+    },
+    "/api/health" : {
+      "get" : {
+        "operationId" : "health",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "health-controller" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "EventDetailDto" : {
+        "type" : "object",
+        "properties" : {
+          "cheapestTier" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "endsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "imageUrl" : {
+            "type" : "string"
+          },
+          "priceRange" : {
+            "$ref" : "#/components/schemas/PriceRange"
+          },
+          "priceTiers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PriceTierDto"
+            }
+          },
+          "saleStartsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sections" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PUBLISHED", "ON_SALE", "SOLD_OUT", "FINISHED" ]
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "totalSeats" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "venue" : {
+            "$ref" : "#/components/schemas/VenueDto"
+          }
+        }
+      },
+      "EventLayoutDto" : {
+        "type" : "object",
+        "properties" : {
+          "eventId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "layout" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SeatBlock"
+            }, {
+              "$ref" : "#/components/schemas/Section"
+            } ]
+          },
+          "seats" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SeatDto"
+            }
+          },
+          "venueName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "EventSummaryDto" : {
+        "type" : "object",
+        "properties" : {
+          "city" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "imageUrl" : {
+            "type" : "string"
+          },
+          "startsAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "DRAFT", "PUBLISHED", "ON_SALE", "SOLD_OUT", "FINISHED" ]
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "venueName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LayoutNode" : { },
+      "PageMetadata" : {
+        "type" : "object",
+        "properties" : {
+          "number" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "number", "size", "totalElements", "totalPages" ]
+      },
+      "PagedModelEventSummaryDto" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EventSummaryDto"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        },
+        "required" : [ "content", "page" ]
+      },
+      "PriceRange" : {
+        "type" : "object",
+        "properties" : {
+          "max" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "min" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "PriceTierDto" : {
+        "type" : "object",
+        "properties" : {
+          "currency" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "priceCents" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "seatCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "Row" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string"
+          },
+          "seatCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "SeatBlock" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/LayoutNode"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "name" : {
+              "type" : "string"
+            },
+            "rows" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/Row"
+              }
+            }
+          }
+        } ]
+      },
+      "SeatDto" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "rowLabel" : {
+            "type" : "string"
+          },
+          "seatNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sectionPath" : {
+            "type" : "string"
+          },
+          "tierId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "Section" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/LayoutNode"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "children" : {
+              "type" : "array",
+              "items" : {
+                "oneOf" : [ {
+                  "$ref" : "#/components/schemas/SeatBlock"
+                }, {
+                  "$ref" : "#/components/schemas/Section"
+                } ]
+              }
+            },
+            "name" : {
+              "type" : "string"
+            }
+          }
+        } ]
+      },
+      "VenueDto" : {
+        "type" : "object",
+        "properties" : {
+          "city" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          }
+        }
+      }
+    }
+  }
+}

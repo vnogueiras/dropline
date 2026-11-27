@@ -153,6 +153,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!-- CatalogServiceApplicationIT writes the OpenAPI spec here (P1-07) -->
+                        <openapi.output>${project.basedir}/../../docs/openapi/catalog.json</openapi.output>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
 
             <plugin>

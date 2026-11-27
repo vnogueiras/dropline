@@ -23,6 +23,9 @@ spring:
 springdoc:
   # document only the public API, not Boot's /error or anything else
   paths-to-match: /api/**
+  # stable, readable output: docs/openapi/catalog.json is committed, so diffs must be meaningful
+  writer-with-order-by-keys: true
+  writer-with-default-pretty-printer: true
   swagger-ui:
     tags-sorter: alpha
     operations-sorter: alpha
