@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import dev.dropline.catalog.api.dto.EventDetailDto;
@@ -141,7 +142,9 @@ class EventControllerTest {
 
     @Test
     void shouldRejectNegativePage() throws Exception {
-        mockMvc.perform(get("/api/events").param("page", "-1")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/events").param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
     }
 
     @Test
@@ -160,6 +163,7 @@ class EventControllerTest {
     void shouldListEveryInvalidParameterSortedByField() throws Exception {
         mockMvc.perform(get("/api/events").param("size", "500").param("page", "-1"))
                 .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.errors.length()").value(2))
                 .andExpect(jsonPath("$.errors[0].field").value("page"))
                 .andExpect(jsonPath("$.errors[1].field").value("size"));
@@ -167,13 +171,16 @@ class EventControllerTest {
 
     @Test
     void shouldRejectZeroPageSize() throws Exception {
-        mockMvc.perform(get("/api/events").param("size", "0")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/events").param("size", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
     }
 
     @Test
     void shouldRejectInvalidStatus() throws Exception {
         mockMvc.perform(get("/api/events").param("status", "INVALID"))
                 .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.title").value("Invalid Request Parameter"))
                 .andExpect(jsonPath("$.detail").value("Invalid value 'INVALID' for parameter 'status'"));
     }
@@ -182,6 +189,7 @@ class EventControllerTest {
     void shouldRejectInvalidDateRange() throws Exception {
         mockMvc.perform(get("/api/events").param("from", "2026-12-20").param("to", "2026-12-01"))
                 .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.title").value("Invalid Request"))
                 .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/invalid-request"));
     }
@@ -190,6 +198,7 @@ class EventControllerTest {
     void shouldRejectInvalidSortDirection() throws Exception {
         mockMvc.perform(get("/api/events").param("sort", "startsAt,sideways"))
                 .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.detail").value("Sort direction must be 'asc' or 'desc'"));
     }
 
@@ -205,6 +214,7 @@ class EventControllerTest {
 
         mockMvc.perform(get("/api/events").param("sort", "foo"))
                 .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.title").value("Invalid Sort Parameter"))
                 .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/invalid-sort"))
                 .andExpect(jsonPath("$.detail").value("Sorting by 'foo' is not supported"));
@@ -282,6 +292,31 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.resourceId").value(EVENT_ID.toString()));
     }
 
+    // ---------- every error is application/problem+json (P1-07 acceptance criterion) ----------
+
+    @Test
+    void shouldReturn405ProblemForUnsupportedMethod() throws Exception {
+        // Not one of our exceptions: HttpRequestMethodNotSupportedException is handled by the
+        // ResponseEntityExceptionHandler that GlobalExceptionHandler extends
+        mockMvc.perform(post("/api/events"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(header().string(HttpHeaders.ALLOW, containsString("GET")))
+                .andExpect(jsonPath("$.status").value(405))
+                .andExpect(jsonPath("$.title").value("Method Not Allowed"));
+    }
+
+    @Test
+    void shouldReturn404ProblemForUnknownUrl() throws Exception {
+        // No controller matches: Spring falls through to static resources and throws NoResourceFoundException,
+        // which ResponseEntityExceptionHandler turns into a 404 problem
+        mockMvc.perform(get("/api/nope"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.title").value("Not Found"));
+    }
+
     @Test
     void shouldReturnGeneric500ProblemWithoutLeakingTheExceptionMessage() throws Exception {
         when(eventService.findDetailedEvent(EVENT_ID)).thenThrow(new IllegalStateException("db password is hunter2"));
@@ -335,6 +370,7 @@ class EventControllerTest {
 
         mockMvc.perform(get("/api/events/{id}/layout", EVENT_ID))
                 .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/event-not-found"))
                 .andExpect(jsonPath("$.resourceId").value(EVENT_ID.toString()));
     }

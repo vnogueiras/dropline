@@ -86,6 +86,36 @@ flowchart LR
 - ☕ **Modern Java on purpose:** records, sealed types, pattern matching for `switch`, record patterns, sequenced collections, virtual threads, text blocks. A *Java 9 → 25 features map* will link every feature to the file that uses it.
 - 🌳 **A hand-written persistent AVL tree** (recursive insert/delete/range queries, property-tested against `TreeMap`) powers the in-memory event timeline behind the calendar.
 - 🗓️ **Time zones done right:** `java.time` end to end, DST-tested month calendars, `.ics` export.
+- 🧯 **One error format everywhere:** every 4xx/5xx is an RFC 9457 `application/problem+json` response. Domain errors are a sealed exception hierarchy mapped with an exhaustive pattern-matching `switch` (no `default`: adding an exception type doesn't compile until it's mapped). The OpenAPI spec is exported to [`docs/openapi/catalog.json`](docs/openapi/catalog.json) on every build.
+
+### Errors and debugging
+
+An error response looks like this:
+
+```json
+{
+  "type": "https://dropline.dev/problems/validation-failed",
+  "title": "Validation Failed",
+  "status": 400,
+  "detail": "The request has 1 invalid value(s)",
+  "instance": "/api/events",
+  "errors": [{ "field": "size", "message": "must be less than or equal to 50" }]
+}
+```
+
+Unexpected errors return a generic 500 with no internal details; the full stack trace is only in the server log.
+
+**Helpful NullPointerExceptions (Java 14+, on by default).** The JVM names exactly which part of an expression was
+`null`, so a log line like this needs no debugger to explain:
+
+```
+java.lang.NullPointerException: Cannot invoke "dev.dropline.catalog.domain.entity.Venue.getCity()"
+    because the return value of "dev.dropline.catalog.domain.entity.Event.getVenue()" is null
+```
+
+Before Java 14 the same line only said `java.lang.NullPointerException`, and with a chain like
+`event.getVenue().getCity()` you had to guess which call returned `null`. Local variable names appear in the message
+only when the code is compiled with `-g` (Maven compiles with debug info by default).
 
 ## Roadmap
 
