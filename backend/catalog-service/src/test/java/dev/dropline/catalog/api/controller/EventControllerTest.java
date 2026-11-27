@@ -1,5 +1,7 @@
 package dev.dropline.catalog.api.controller;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -278,6 +280,18 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/event-not-found"))
                 .andExpect(jsonPath("$.resource").value("Event"))
                 .andExpect(jsonPath("$.resourceId").value(EVENT_ID.toString()));
+    }
+
+    @Test
+    void shouldReturnGeneric500ProblemWithoutLeakingTheExceptionMessage() throws Exception {
+        when(eventService.findDetailedEvent(EVENT_ID)).thenThrow(new IllegalStateException("db password is hunter2"));
+
+        mockMvc.perform(get("/api/events/{id}", EVENT_ID))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Internal Server Error"))
+                .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/internal-error"))
+                .andExpect(content().string(not(containsString("hunter2"))));
     }
 
     @Test

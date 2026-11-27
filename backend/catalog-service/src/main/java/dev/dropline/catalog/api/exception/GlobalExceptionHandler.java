@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -29,6 +30,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * (type mismatch, 404 no handler, 405, 415...). Their titles and details are customised in
  * {@code messages.properties}. Validation errors are built here because they need the {@code errors} list.
  */
+@Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -42,6 +44,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ProblemDetail> handleDropline(DroplineException exception) {
         ProblemDetail problem = problemMapper.toProblem(exception);
         return ResponseEntity.status(problem.getStatus()).body(problem);
+    }
+
+    // ---------- catch-all ----------
+
+    /**
+     * Anything no other handler matched: a bug, the database being down, a broken entity invariant.
+     * More specific handlers (here and in {@link ResponseEntityExceptionHandler}) always win, because
+     * Spring picks the handler whose exception type is closest to the thrown one.
+     *
+     * <p>The client gets a generic message (the exception message may contain internals); the log gets
+     * the full stack trace.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ProblemDetail> handleUnexpected(Exception exception, WebRequest request) {
+        log.error("Unhandled exception for {}", request.getDescription(false), exception);
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again later.");
+        problem.setTitle("Internal Server Error");
+        problem.setType(URI.create(ProblemMapper.TYPE_BASE + "internal-error"));
+        return ResponseEntity.internalServerError().body(problem);
     }
 
     // ---------- validation: three sources, one response shape ----------
