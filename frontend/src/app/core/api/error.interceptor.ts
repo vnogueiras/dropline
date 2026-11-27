@@ -2,7 +2,7 @@ import {
   HttpContext,
   HttpContextToken,
   HttpErrorResponse,
-  HttpInterceptorFn,
+  type HttpInterceptorFn,
 } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';

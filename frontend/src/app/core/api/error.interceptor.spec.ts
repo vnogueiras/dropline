@@ -1,7 +1,7 @@
 import {
   HttpClient,
   HttpErrorResponse,
-  HttpContext,
+  type HttpContext,
   provideHttpClient,
   withInterceptors,
 } from '@angular/common/http';
