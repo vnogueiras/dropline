@@ -6,12 +6,14 @@ import dev.dropline.catalog.api.dto.EventSummaryDto;
 import dev.dropline.catalog.api.mapper.EventMapper;
 import dev.dropline.catalog.domain.entity.Event;
 import dev.dropline.catalog.domain.entity.EventStatus;
+import dev.dropline.catalog.domain.entity.PriceTier;
 import dev.dropline.catalog.domain.entity.Venue;
 import dev.dropline.catalog.domain.layout.LayoutNode;
 import dev.dropline.catalog.persistence.repository.EventRepository;
 import dev.dropline.catalog.persistence.repository.EventSpecifications;
 import dev.dropline.catalog.persistence.repository.SeatRepository;
 import dev.dropline.catalog.persistence.repository.VenueRepository;
+import dev.dropline.catalog.persistence.repository.projection.SeatView;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -69,7 +71,28 @@ public class EventService {
             Map<UUID, Long> seatCounts = seatRepository.countSeatsByTier(eventId).stream()
                     .collect(Collectors.toMap(view -> view.getTierId(), view -> view.getSeatCount()));
 
-            return eventMapper.toDetailDto(event, seatCounts);
+            List<PriceTier> tiersByPrice = event.getPriceTiers().stream()
+                    .sorted(Comparator.comparingInt(PriceTier::getPriceCents))
+                    .toList();
+
+            // getFirst() throws on an empty list, so an event without tiers gets null
+            String cheapestTier =
+                    tiersByPrice.isEmpty() ? null : tiersByPrice.getFirst().getName();
+
+            EventDetailDto.PriceRange priceRange = event.getPriceTiers().stream()
+                    .map(PriceTier::getPriceCents)
+                    .collect(Collectors.teeing(
+                            Collectors.minBy(Integer::compare),
+                            Collectors.maxBy(Integer::compare),
+                            (lo, hi) -> new EventDetailDto.PriceRange(lo.orElse(null), hi.orElse(null))));
+
+            List<SeatView> seats = seatRepository.findSeatsByEventId(eventId);
+            long totalSeats = seats.size();
+
+            Map<String, Long> sections = seats.stream()
+                    .collect(Collectors.groupingBy(SeatView::getSectionPath, TreeMap::new, Collectors.counting()));
+
+            return eventMapper.toDetailDto(event, seatCounts, cheapestTier, priceRange, totalSeats, sections);
         });
     }
 

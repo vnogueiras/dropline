@@ -15,6 +15,7 @@ import dev.dropline.catalog.persistence.repository.EventRepository;
 import dev.dropline.catalog.persistence.repository.SeatRepository;
 import jakarta.persistence.EntityManager;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,6 +118,43 @@ class EventServiceIT {
         assertThat(result.priceTiers())
                 .extracting(EventDetailDto.PriceTierDto::seatCount)
                 .containsExactlyInAnyOrder(2L, 1L);
+
+        assertThat(result.cheapestTier()).isEqualTo("Regular");
+        assertThat(result.priceRange()).isEqualTo(new EventDetailDto.PriceRange(5000, 10000));
+        assertThat(result.totalSeats()).isEqualTo(3);
+        // TreeMap: sections come back sorted by name
+        assertThat(result.sections()).containsExactly(Map.entry("Main", 2L), Map.entry("VIP", 1L));
+    }
+
+    @Test
+    void shouldReturnEmptySummaryWhenEventHasNoTiersOrSeats() {
+        // Arrange
+        Venue venue = new Venue("Paradiso", "Amsterdam", "Europe/Amsterdam", JsonNodeFactory.instance.objectNode());
+        entityManager.persist(venue);
+
+        Event event = new Event(
+                venue,
+                "Announced Show",
+                "Tickets soon",
+                "image.jpg",
+                Instant.parse("2027-09-01T19:00:00Z"),
+                Instant.parse("2027-09-01T23:00:00Z"),
+                Instant.parse("2027-08-01T10:00:00Z"));
+        entityManager.persist(event);
+        entityManager.flush();
+
+        UUID eventId = event.getId();
+        entityManager.clear();
+
+        // Act
+        EventDetailDto result = eventService.findDetailedEvent(eventId).orElseThrow();
+
+        // Assert
+        assertThat(result.priceTiers()).isEmpty();
+        assertThat(result.cheapestTier()).isNull();
+        assertThat(result.priceRange()).isEqualTo(new EventDetailDto.PriceRange(null, null));
+        assertThat(result.totalSeats()).isZero();
+        assertThat(result.sections()).isEmpty();
     }
 
     @Test

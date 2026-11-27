@@ -15,8 +15,10 @@ import dev.dropline.catalog.domain.layout.Section;
 import dev.dropline.catalog.service.EventService;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -196,7 +198,13 @@ class EventControllerTest {
                 Instant.parse("2027-05-15T10:00:00Z"),
                 EventStatus.ON_SALE,
                 new EventDetailDto.VenueDto(UUID.randomUUID(), "Ziggo Dome", "Amsterdam", "Europe/Amsterdam"),
-                List.of(new EventDetailDto.PriceTierDto(UUID.randomUUID(), "VIP", 12000, "EUR", 20)));
+                List.of(
+                        new EventDetailDto.PriceTierDto(UUID.randomUUID(), "Regular", 4500, "EUR", 100),
+                        new EventDetailDto.PriceTierDto(UUID.randomUUID(), "VIP", 12000, "EUR", 20)),
+                "Regular",
+                new EventDetailDto.PriceRange(4500, 12000),
+                120L,
+                new TreeMap<>(Map.of("Floor", 100L, "VIP", 20L)));
     }
 
     @Test
@@ -210,7 +218,13 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.id").value(EVENT_ID.toString()))
                 .andExpect(jsonPath("$.title").value("Electronic Nights"))
                 .andExpect(jsonPath("$.venue.city").value("Amsterdam"))
-                .andExpect(jsonPath("$.priceTiers[0].seatCount").value(20));
+                .andExpect(jsonPath("$.priceTiers[1].seatCount").value(20))
+                .andExpect(jsonPath("$.cheapestTier").value("Regular"))
+                .andExpect(jsonPath("$.priceRange.min").value(4500))
+                .andExpect(jsonPath("$.priceRange.max").value(12000))
+                .andExpect(jsonPath("$.totalSeats").value(120))
+                .andExpect(jsonPath("$.sections.Floor").value(100))
+                .andExpect(jsonPath("$.sections.VIP").value(20));
     }
 
     @Test
