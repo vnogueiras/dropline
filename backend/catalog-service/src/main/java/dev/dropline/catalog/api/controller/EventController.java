@@ -23,12 +23,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController()
 @RequestMapping("/api/events")
-@Validated
 @RequiredArgsConstructor
 public class EventController {
 
