@@ -3,7 +3,8 @@ package dev.dropline.catalog.api.controller;
 import dev.dropline.catalog.api.dto.EventDetailDto;
 import dev.dropline.catalog.api.dto.EventLayoutDto;
 import dev.dropline.catalog.api.dto.EventSummaryDto;
-import dev.dropline.catalog.api.exception.EventNotFoundException;
+import dev.dropline.catalog.api.exception.InvalidRequestException;
+import dev.dropline.catalog.api.exception.NotFoundException;
 import dev.dropline.catalog.domain.entity.EventStatus;
 import dev.dropline.catalog.service.EventService;
 import jakarta.validation.constraints.Max;
@@ -22,12 +23,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController()
 @RequestMapping("/api/events")
-@Validated
 @RequiredArgsConstructor
 public class EventController {
 
@@ -43,7 +42,7 @@ public class EventController {
             @RequestParam(defaultValue = "12") @Min(1) @Max(50) int size,
             @RequestParam(defaultValue = "startsAt,asc") String sort) {
         if (from != null && to != null && to.isBefore(from)) {
-            throw new IllegalArgumentException("The 'to' date must not be before the 'from' date");
+            throw new InvalidRequestException("The 'to' date must not be before the 'from' date");
         }
 
         Set<EventStatus> statuses = status == null ? null : Set.of(status);
@@ -60,7 +59,7 @@ public class EventController {
 
     @GetMapping("/{id}")
     public ResponseEntity<EventDetailDto> getEvent(@PathVariable UUID id) {
-        EventDetailDto event = eventService.findDetailedEvent(id).orElseThrow(() -> new EventNotFoundException(id));
+        EventDetailDto event = eventService.findDetailedEvent(id).orElseThrow(() -> new NotFoundException("Event", id));
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(Duration.ofSeconds(30)).cachePublic())
                 .body(event);
@@ -68,7 +67,7 @@ public class EventController {
 
     @GetMapping("/{id}/layout")
     public ResponseEntity<EventLayoutDto> getEventLayout(@PathVariable UUID id) {
-        EventLayoutDto eventLayout = eventService.findLayout(id).orElseThrow(() -> new EventNotFoundException(id));
+        EventLayoutDto eventLayout = eventService.findLayout(id).orElseThrow(() -> new NotFoundException("Event", id));
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(Duration.ofSeconds(300)).cachePublic())
                 .body(eventLayout);
@@ -79,7 +78,10 @@ public class EventController {
 
         String property = parts[0].strip();
 
-        Sort.Direction direction = parts.length == 2 ? Sort.Direction.fromString(parts[1].strip()) : Sort.Direction.ASC;
+        Sort.Direction direction = parts.length == 2
+                ? Sort.Direction.fromOptionalString(parts[1].strip())
+                        .orElseThrow(() -> new InvalidRequestException("Sort direction must be 'asc' or 'desc'"))
+                : Sort.Direction.ASC;
 
         return Sort.by(direction, property);
     }

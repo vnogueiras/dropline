@@ -1,13 +1,17 @@
 package dev.dropline.catalog.api.controller;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import dev.dropline.catalog.api.dto.EventDetailDto;
 import dev.dropline.catalog.api.dto.EventLayoutDto;
 import dev.dropline.catalog.api.exception.InvalidSortException;
+import dev.dropline.catalog.api.exception.ProblemMapper;
 import dev.dropline.catalog.config.HttpCachingConfig;
 import dev.dropline.catalog.domain.entity.EventStatus;
 import dev.dropline.catalog.domain.layout.SeatBlock;
@@ -37,7 +41,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(EventController.class)
-@Import({EventControllerTest.TestCacheConfiguration.class, HttpCachingConfig.class})
+@Import({EventControllerTest.TestCacheConfiguration.class, HttpCachingConfig.class, ProblemMapper.class})
 class EventControllerTest {
 
     @Autowired
@@ -138,33 +142,64 @@ class EventControllerTest {
 
     @Test
     void shouldRejectNegativePage() throws Exception {
-        mockMvc.perform(get("/api/events").param("page", "-1")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/events").param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
     }
 
     @Test
     void shouldRejectPageSizeAboveMaximum() throws Exception {
-        mockMvc.perform(get("/api/events").param("size", "500")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/events").param("size", "500"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Validation Failed"))
+                .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/validation-failed"))
+                .andExpect(jsonPath("$.errors.length()").value(1))
+                .andExpect(jsonPath("$.errors[0].field").value("size"))
+                .andExpect(jsonPath("$.errors[0].message").isNotEmpty());
+    }
+
+    @Test
+    void shouldListEveryInvalidParameterSortedByField() throws Exception {
+        mockMvc.perform(get("/api/events").param("size", "500").param("page", "-1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.errors.length()").value(2))
+                .andExpect(jsonPath("$.errors[0].field").value("page"))
+                .andExpect(jsonPath("$.errors[1].field").value("size"));
     }
 
     @Test
     void shouldRejectZeroPageSize() throws Exception {
-        mockMvc.perform(get("/api/events").param("size", "0")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/events").param("size", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
     }
 
     @Test
     void shouldRejectInvalidStatus() throws Exception {
-        mockMvc.perform(get("/api/events").param("status", "INVALID")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/events").param("status", "INVALID"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Invalid Request Parameter"))
+                .andExpect(jsonPath("$.detail").value("Invalid value 'INVALID' for parameter 'status'"));
     }
 
     @Test
     void shouldRejectInvalidDateRange() throws Exception {
         mockMvc.perform(get("/api/events").param("from", "2026-12-20").param("to", "2026-12-01"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Invalid Request"))
+                .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/invalid-request"));
     }
 
     @Test
     void shouldRejectInvalidSortDirection() throws Exception {
-        mockMvc.perform(get("/api/events").param("sort", "startsAt,sideways")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/events").param("sort", "startsAt,sideways"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Sort direction must be 'asc' or 'desc'"));
     }
 
     @Test
@@ -179,7 +214,9 @@ class EventControllerTest {
 
         mockMvc.perform(get("/api/events").param("sort", "foo"))
                 .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.title").value("Invalid Sort Parameter"))
+                .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/invalid-sort"))
                 .andExpect(jsonPath("$.detail").value("Sorting by 'foo' is not supported"));
     }
 
@@ -251,14 +288,54 @@ class EventControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(jsonPath("$.title").value("Event Not Found"))
                 .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/event-not-found"))
-                .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()));
+                .andExpect(jsonPath("$.resource").value("Event"))
+                .andExpect(jsonPath("$.resourceId").value(EVENT_ID.toString()));
+    }
+
+    // ---------- every error is application/problem+json (P1-07 acceptance criterion) ----------
+
+    @Test
+    void shouldReturn405ProblemForUnsupportedMethod() throws Exception {
+        // Not one of our exceptions: HttpRequestMethodNotSupportedException is handled by the
+        // ResponseEntityExceptionHandler that GlobalExceptionHandler extends
+        mockMvc.perform(post("/api/events"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(header().string(HttpHeaders.ALLOW, containsString("GET")))
+                .andExpect(jsonPath("$.status").value(405))
+                .andExpect(jsonPath("$.title").value("Method Not Allowed"));
+    }
+
+    @Test
+    void shouldReturn404ProblemForUnknownUrl() throws Exception {
+        // No controller matches: Spring falls through to static resources and throws NoResourceFoundException,
+        // which ResponseEntityExceptionHandler turns into a 404 problem
+        mockMvc.perform(get("/api/nope"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.title").value("Not Found"));
+    }
+
+    @Test
+    void shouldReturnGeneric500ProblemWithoutLeakingTheExceptionMessage() throws Exception {
+        when(eventService.findDetailedEvent(EVENT_ID)).thenThrow(new IllegalStateException("db password is hunter2"));
+
+        mockMvc.perform(get("/api/events/{id}", EVENT_ID))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Internal Server Error"))
+                .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/internal-error"))
+                .andExpect(content().string(not(containsString("hunter2"))));
     }
 
     @Test
     void shouldReturn400WhenEventIdIsNotAUuid() throws Exception {
         mockMvc.perform(get("/api/events/{id}", "not-a-uuid"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").value("Invalid Request Parameter"));
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Invalid Request Parameter"))
+                .andExpect(jsonPath("$.detail").value("Invalid value 'not-a-uuid' for parameter 'id'"));
 
         verifyNoInteractions(eventService);
     }
@@ -293,6 +370,8 @@ class EventControllerTest {
 
         mockMvc.perform(get("/api/events/{id}/layout", EVENT_ID))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.eventId").value(EVENT_ID.toString()));
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.type").value("https://dropline.dev/problems/event-not-found"))
+                .andExpect(jsonPath("$.resourceId").value(EVENT_ID.toString()));
     }
 }

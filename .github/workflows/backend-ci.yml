@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'backend/**'
+      - 'docs/openapi/**'
       - '.github/workflows/backend-ci.yml'
 
   pull_request:
@@ -37,6 +38,15 @@ jobs:
       - name: Build and test
         run: ./mvnw -B -ntp verify
         working-directory: backend
+
+      - name: Check the committed OpenAPI spec is up to date
+        run: |
+          if [ -n "$(git status --porcelain -- docs/openapi)" ]; then
+            echo "::error::docs/openapi is out of date. Run './mvnw verify' in backend/ and commit the result."
+            git status --porcelain -- docs/openapi
+            git diff -- docs/openapi
+            exit 1
+          fi
 
       - name: Upload test and coverage reports
         if: always()

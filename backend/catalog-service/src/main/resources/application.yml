@@ -15,6 +15,20 @@ spring:
     web:
       pageable:
         serialization-mode: via-dto
+  mvc:
+    problemdetails:
+      enabled: true
+
+# OpenAPI docs: spec at /v3/api-docs, Swagger UI at /swagger-ui.html (both springdoc defaults)
+springdoc:
+  # document only the public API, not Boot's /error or anything else
+  paths-to-match: /api/**
+  # stable, readable output: docs/openapi/catalog.json is committed, so diffs must be meaningful
+  writer-with-order-by-keys: true
+  writer-with-default-pretty-printer: true
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter: alpha
 
 server:
   port: 8081
