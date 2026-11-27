@@ -73,7 +73,9 @@ class EventMapperTest {
                 regular.getId(), 100L,
                 vip.getId(), 20L);
 
-        EventDetailDto dto = mapper.toDetailDto(event, seatCounts);
+        EventDetailDto.PriceRange priceRange = new EventDetailDto.PriceRange(5000, 10000);
+        Map<String, Long> sections = Map.of("Floor", 100L, "VIP", 20L);
+        EventDetailDto dto = mapper.toDetailDto(event, seatCounts, "Regular", priceRange, 120, sections);
 
         assertThat(dto.title()).isEqualTo("Concert");
         assertThat(dto.description()).isEqualTo("Live music");
@@ -90,6 +92,11 @@ class EventMapperTest {
         assertThat(dto.priceTiers())
                 .extracting(EventDetailDto.PriceTierDto::seatCount)
                 .containsExactly(100L, 20L);
+
+        assertThat(dto.cheapestTier()).isEqualTo("Regular");
+        assertThat(dto.priceRange()).isEqualTo(priceRange);
+        assertThat(dto.totalSeats()).isEqualTo(120);
+        assertThat(dto.sections()).isEqualTo(sections);
     }
 
     @Test
@@ -110,7 +117,8 @@ class EventMapperTest {
         PriceTier tier = new PriceTier(event, "Regular", 5000, "EUR");
         event.getPriceTiers().add(tier);
 
-        EventDetailDto dto = mapper.toDetailDto(event, Map.of());
+        EventDetailDto.PriceRange priceRange = new EventDetailDto.PriceRange(5000, 5000);
+        EventDetailDto dto = mapper.toDetailDto(event, Map.of(), "Regular", priceRange, 0, Map.of());
 
         assertThat(dto.priceTiers()).hasSize(1);
         assertThat(dto.priceTiers().getFirst().seatCount()).isZero();

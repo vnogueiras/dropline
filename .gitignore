@@ -271,3 +271,6 @@ terraform.rc
 # Docker
 infra/.env
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij,visualstudiocode,angular,macos,terraform
+
+# Personal lefthook overrides (e.g. rc: ~/.lefthookrc)
+lefthook-local.yml

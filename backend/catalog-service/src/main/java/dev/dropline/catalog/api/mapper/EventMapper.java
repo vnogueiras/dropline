@@ -17,9 +17,16 @@ public interface EventMapper {
 
     EventSummaryDto toDto(EventSummaryView view);
 
-    @Mapping(target = "venue", source = "venue")
-    @Mapping(target = "priceTiers", source = "priceTiers")
-    EventDetailDto toDetailDto(Event event, @Context Map<UUID, Long> seatCounts);
+    @Mapping(target = "venue", source = "event.venue")
+    @Mapping(target = "priceTiers", source = "event.priceTiers")
+    @Mapping(target = "id", source = "event.id")
+    EventDetailDto toDetailDto(
+            Event event,
+            @Context Map<UUID, Long> seatCounts,
+            String cheapestTier,
+            EventDetailDto.PriceRange priceRange,
+            long totalSeats,
+            Map<String, Long> sections);
 
     EventDetailDto.VenueDto toVenueDto(Venue venue);
 

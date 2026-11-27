@@ -1,6 +1,7 @@
 package dev.dropline.catalog.api.exception;
 
 import jakarta.validation.ConstraintViolationException;
+import java.net.URI;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -62,5 +63,14 @@ public class GlobalExceptionHandler {
         problem.setTitle("Invalid Sort Parameter");
 
         return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleEventNotFound(EventNotFoundException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+        problem.setTitle("Event Not Found");
+        problem.setType(URI.create("https://dropline.dev/problems/event-not-found"));
+        problem.setProperty("eventId", exception.getEventId());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
     }
 }
