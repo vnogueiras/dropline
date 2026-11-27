@@ -110,8 +110,14 @@ git clone https://github.com/vnogueiras/dropline.git
 cd dropline
 
 ./scripts/doctor.sh                                  # check your toolchain
-docker compose -f infra/docker-compose.yml --profile infra up -d   # Postgres, Redis, Kafka, Kafka UI
+cp .env.example .env                                 # local ports and passwords (git-ignored)
+
+# Postgres, Redis, Kafka, Kafka UI (run from the repo root)
+docker compose --env-file .env -f infra/docker-compose.yml --profile infra up -d
 ```
+
+> Always pass `--env-file .env`. The compose file lives in `infra/`, but `.env` is in the repo root, so without the flag
+> every `${...}` variable is empty: Postgres gets a random host port instead of 5432 and Redis restarts in a loop.
 
 | What | Where |
 |---|---|

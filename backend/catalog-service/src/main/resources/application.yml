@@ -19,6 +19,14 @@ spring:
     problemdetails:
       enabled: true
 
+# OpenAPI docs: spec at /v3/api-docs, Swagger UI at /swagger-ui.html (both springdoc defaults)
+springdoc:
+  # document only the public API, not Boot's /error or anything else
+  paths-to-match: /api/**
+  swagger-ui:
+    tags-sorter: alpha
+    operations-sorter: alpha
+
 server:
   port: 8081
 
